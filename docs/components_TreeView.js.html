@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: components/TreeView.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: components/TreeView.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React, { useEffect, useState } from 'react';
+import ReactEcharts from 'echarts-for-react';
+
+/**
+ * TreeView component.
+ * Displays hierarchical data using a tree view.
+ * @component
+ * @param {Object} props - Component props.
+ * @param {Object} props.data - Hierarchical data to be displayed in the tree.
+ * @param {Array} props.selectedNode - Array of selected nodes.
+ * @param {function} props.setSelectedNode - Function to set selected nodes.
+ * @param {function} props.setSelectedLine - Function to set selected line index.
+ * @returns {JSX.Element} The rendered TreeView.
+ */
+const TreeView = ({ data, selectedNode, setSelectedNode, setSelectedLine }) => {
+  // State to track loading status
+  const [loading, setLoading] = useState(true);
+  // State to hold the ECharts option
+  const [option, setOption] = useState(null);
+  // State to track whether the Ctrl key is pressed
+  const [ctrlKey, setCtrlKey] = useState(false);
+
+  useEffect(() => {
+    if (data) {
+      // Function to process nodes for styling and numbering
+      const processNode = (node, index) => {
+        node.number = index + 1;
+        node.itemStyle = {
+          color: selectedNode.includes(node.name) ? 'red' : 'lightblue',
+        };
+
+        if (node.children &amp;&amp; node.children.length > 0) {
+          node.children.forEach(processNode);
+        }
+      };
+
+      // Process and style the nodes
+      processNode(data, 0);
+
+      // Create the ECharts option for the tree view
+      const newOption = {
+        tooltip: {
+          trigger: 'item',
+          triggerOn: 'mousemove'
+        },
+        series: [
+          {
+            type: 'tree',
+            data: [data],
+            top: '-1%',
+            left: '10%',
+            bottom: '1%',
+            right: '10%',
+            symbolSize: 5,
+            label: {
+              position: 'left',
+              verticalAlign: 'middle',
+              align: 'right',
+              fontSize: 10,
+              formatter: (params) => {
+                const { data } = params;
+                if (data.name) {
+                  const cutName = data.name.split('_')[0];
+                  return cutName;
+                }
+                return '';
+              }
+            },
+            leaves: {
+              label: {
+                position: 'right',
+                verticalAlign: 'middle',
+                align: 'left'
+              },
+            },
+            emphasis: {
+              focus: 'descendant'
+            },
+            expandAndCollapse: false,
+            animationDuration: 0,
+            animationDurationUpdate: 0
+          },
+        ],
+      };
+
+      setOption(newOption);
+      setLoading(false);
+    }
+  }, [data, selectedNode]);
+
+  // Click event handler for tree nodes
+  const handleClick = (params, ctrlKey) => {
+    const { data } = params;
+    if (data.name) {
+      const clickedNodeName = data.name;
+      let updatedSelectedNode;
+
+      if (ctrlKey) {
+        updatedSelectedNode = selectedNode.includes(clickedNodeName)
+          ? selectedNode.filter((name) => name !== clickedNodeName)
+          : [...selectedNode, clickedNodeName];
+      } else {
+        updatedSelectedNode = [clickedNodeName];
+      }
+
+      setSelectedNode(updatedSelectedNode);
+
+      const index = clickedNodeName.split('_')[1];
+      setSelectedLine(index);
+    }
+  };
+
+  // Keyboard event listeners to track Ctrl key state
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.ctrlKey || event.metaKey) {
+        setCtrlKey(true);
+      }
+    };
+
+    const handleKeyUp = (event) => {
+      if (!event.ctrlKey &amp;&amp; !event.metaKey) {
+        setCtrlKey(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
+
+  return (
+    &lt;div style={{ textAlign: 'center' }}>
+      {/* Title */}
+      &lt;h2>Tree View&lt;/h2>
+      {/* Render loading message or the ECharts tree */}
+      {loading ? (
+        &lt;div>Loading...&lt;/div>
+      ) : (
+        &lt;ReactEcharts
+          option={option || {}}
+          opts={{ renderer: 'svg' }}
+          style={{ width: '100%', height: '500px', margin: '0 auto' }}
+          onEvents={{ 
+            click: (params) => {
+              handleClick(params, ctrlKey);
+            } 
+          }}
+        />
+      )}
+    &lt;/div>
+  );
+
+};
+
+export default TreeView;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#App">App</a></li><li><a href="global.html#ClusterScatterplot">ClusterScatterplot</a></li><li><a href="global.html#ParallelChart">ParallelChart</a></li><li><a href="global.html#ThreeJS">ThreeJS</a></li><li><a href="global.html#TreeView">TreeView</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Tue Aug 08 2023 15:00:43 GMT-0500 (Central Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
